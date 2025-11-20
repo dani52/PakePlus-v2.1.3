@@ -1,32 +1,553 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="styles.css" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus App</title>
-        <script type="module" src="/main.js" defer></script>
-    </head>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多语言在线翻译</title>
+  <!-- 引入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 自定义 Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6', // 主色调：蓝色，代表科技感和可靠性
+            secondary: '#10B981', // 辅助色：绿色，用于成功状态
+            neutral: '#1F2937', // 中性色：深灰，用于文本
+            light: '#F9FAFB', // 浅色：用于背景
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02)',
+            'hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          }
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .transition-all-300 {
+        transition: all 300ms ease-in-out;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .bg-gradient {
+        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      }
+    }
+  </style>
+  
+  <style>
+    /* 全局样式 */
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: #F3F4F6;
+    }
+    
+    /* 滚动条美化 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #E5E7EB;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #9CA3AF;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6B7280;
+    }
+    
+    /* 动画效果 */
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+    .animate-pulse-slow {
+      animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    /* AI回答样式 */
+    .ai-answer {
+      line-height: 1.8;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    
+    /* 复制按钮悬停效果 */
+    .copy-btn-hover {
+      transition: all 0.2s ease;
+    }
+    .copy-btn-hover:hover {
+      transform: scale(1.1);
+      background-color: #3B82F6;
+      color: white;
+    }
+    
+    /* 语言选择样式 */
+    .language-select-container {
+      position: relative;
+    }
+    
+    .language-dropdown {
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    
+    .language-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .language-item:hover {
+      background-color: #EFF6FF;
+    }
+    
+    .language-item.selected {
+      background-color: #DBEAFE;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-4 flex justify-center items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-language text-primary text-2xl"></i>
+        <h1 class="text-xl md:text-2xl font-bold text-neutral">多语言在线翻译</h1>
+      </div>
+    </div>
+  </header>
 
-    <body>
-        <main class="container">
-            <h1>Welcome to PakePlus</h1>
-            <form class="row" id="greet-form">
-                <input id="inputValue" placeholder="Enter a something..." />
-            </form>
-            <div class="resultBox">
-                <span>result: </span>
-                <span id="result"></span>
+  <!-- 主要内容区 -->
+  <main class="flex-grow container mx-auto px-4 py-8 md:py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- 左侧表单区域 -->
+      <div class="lg:col-span-7 space-y-6">
+        <div class="bg-white rounded-xl shadow-card p-6 md:p-8 transition-all-300 hover:shadow-hover">
+          <!-- 移除"翻译配置"标题 -->
+          
+          <!-- 目标语言选择（直接显示选项，无搜索） -->
+          <div class="mb-6">
+            <label for="targetLanguage" class="block text-sm font-medium text-neutral/80 mb-2">目标语言</label>
+            <div class="language-select-container relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral/50 pointer-events-none">
+                <i class="fa fa-globe"></i>
+              </span>
+              <!-- 语言选择触发按钮 -->
+              <button 
+                id="languageSelectBtn" 
+                class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all-300 text-left flex justify-between items-center"
+              >
+                <span id="selectedLanguageText">维吾尔文</span>
+                <i class="fa fa-chevron-down text-neutral/50"></i>
+              </button>
+              <!-- 语言下拉框 -->
+              <div id="languageDropdown" class="language-dropdown hidden absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                <!-- 语言选项将通过JS动态生成 -->
+              </div>
+              <input type="hidden" id="targetLanguage" value="维吾尔文">
             </div>
-            <div class="invokeBox">
-                <button id="openUrl">open_url_browser</button>
-                <button id="openUrlNew">open_url_new</button>
-                <button id="runCommand">run_command</button>
-                <button id="downloadFile">download_file</button>
-                <button id="getExeDir">get_exe_dir</button>
-                <button id="getEnvVar">get_env_var</button>
-                <button id="findPort">find_port</button>
+          </div>
+          
+          <!-- 隐藏的System Prompt输入 -->
+          <input type="hidden" id="systemPrompt" value="把下面的文本翻译成维吾尔文，不要额外解释">
+          
+          <!-- 翻译内容输入 -->
+          <div class="mb-6">
+            <label for="content" class="block text-sm font-medium text-neutral/80 mb-2">需要翻译的内容</label>
+            <div class="relative">
+              <span class="absolute top-3 left-3 text-neutral/50">
+                <i class="fa fa-comment"></i>
+              </span>
+              <textarea 
+                id="content" 
+                placeholder="请输入您想要翻译的内容..." 
+                class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all-300 min-h-[150px] resize-none"
+                required
+              ></textarea>
+              <div class="absolute bottom-3 right-3 text-sm text-neutral/50">
+                <span id="userContentCharCount">0</span> 字符
+              </div>
             </div>
-        </main>
-    </body>
+          </div>
+          
+          <!-- 按钮区域 -->
+          <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-100">
+            <button id="submitBtn" class="flex-1 bg-gradient text-white font-medium py-3 px-6 rounded-lg hover:opacity-90 transition-all-300 flex items-center justify-center">
+              <i class="fa fa-language mr-2"></i> 开始翻译
+            </button>
+            <button id="clearBtn" class="flex-1 bg-white border border-gray-300 text-neutral font-medium py-3 px-6 rounded-lg hover:bg-gray-50 transition-all-300 flex items-center justify-center">
+              <i class="fa fa-refresh mr-2"></i> 清空内容
+            </button>
+          </div>
+        </div>
+        
+        <!-- 状态信息区域 -->
+        <div id="statusContainer" class="hidden bg-white rounded-xl shadow-card p-6 transition-all-300">
+          <h3 class="text-lg font-semibold text-neutral mb-3 flex items-center">
+            <i id="statusIcon" class="fa fa-info-circle mr-2"></i>
+            <span id="statusTitle">翻译状态</span>
+          </h3>
+          <div id="statusContent" class="text-neutral/80">
+            准备翻译...
+          </div>
+        </div>
+      </div>
+      
+      <!-- 右侧响应结果区域 -->
+      <div class="lg:col-span-5">
+        <div class="bg-white rounded-xl shadow-card p-6 md:p-8 h-full transition-all-300 hover:shadow-hover flex flex-col">
+          <h2 class="text-xl font-bold text-neutral mb-6 flex items-center">
+            <i class="fa fa-reply text-primary mr-2"></i> 翻译结果
+          </h2>
+          
+          <!-- 翻译结果展示区域 -->
+          <div id="aiAnswerContainer" class="flex-grow overflow-auto bg-gray-50 rounded-lg p-6 mb-4 min-h-[300px]">
+            <div class="text-neutral/50 flex flex-col items-center justify-center h-full">
+              <i class="fa fa-language text-4xl mb-3 opacity-50"></i>
+              <p class="text-center">翻译结果将显示在这里</p>
+              <p class="text-xs mt-2">Translation result will be displayed here</p>
+            </div>
+          </div>
+          
+          <!-- 结果复制按钮（默认隐藏） -->
+          <div id="answerCopyBtnContainer" class="hidden mb-4 flex justify-end">
+            <button id="answerCopyBtn" class="copy-btn-hover bg-primary/10 text-primary p-2 rounded-full flex items-center justify-center" title="复制翻译结果">
+              <i class="fa fa-copy"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<!-- 页脚 -->
+  <footer class="bg-light text-black py-6">
+    <div class="container mx-auto px-4 text-center text-sm">
+      <p>By：Daniyar</p>
+    </div>
+  </footer>
+
+  <!-- JavaScript 逻辑 -->
+  <script>
+    // 内置密钥
+    const API_TOKEN = 'sk-jqrqflwsziixlogbrkshnjzaxmhkkubrxapadhntdgpfkeje';
+    // 默认使用Hunyuan-MT-7B模型
+    const DEFAULT_MODEL = 'tencent/Hunyuan-MT-7B';
+    
+    // 支持的语言列表（维吾尔文排第一）
+    const supportedLanguages = [
+      "维吾尔文", "哈萨克文", "英语", "中文", "日语", "韩语", 
+      "法语", "德语", "俄语", "西班牙语", "阿拉伯语"
+    ];
+    
+    // DOM 元素
+    const systemPromptInput = document.getElementById('systemPrompt');
+    const contentInput = document.getElementById('content');
+    const userContentCharCount = document.getElementById('userContentCharCount');
+    const submitBtn = document.getElementById('submitBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const aiAnswerContainer = document.getElementById('aiAnswerContainer');
+    const answerCopyBtnContainer = document.getElementById('answerCopyBtnContainer');
+    const answerCopyBtn = document.getElementById('answerCopyBtn');
+    const statusContainer = document.getElementById('statusContainer');
+    const statusIcon = document.getElementById('statusIcon');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusContent = document.getElementById('statusContent');
+    const languageSelectBtn = document.getElementById('languageSelectBtn');
+    const languageDropdown = document.getElementById('languageDropdown');
+    const targetLanguage = document.getElementById('targetLanguage');
+    const selectedLanguageText = document.getElementById('selectedLanguageText');
+    
+    // 初始状态
+    let responseData = null;
+    let currentAiAnswer = '';
+    let isDropdownOpen = false;
+    
+    // 初始化语言选择器
+    function initLanguageSelector() {
+      // 生成语言选项
+      renderLanguageOptions(supportedLanguages);
+      
+      // 点击选择按钮切换下拉框显示
+      languageSelectBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleDropdown();
+      });
+      
+      // 点击外部关闭下拉框
+      document.addEventListener('click', () => {
+        if (isDropdownOpen) {
+          closeDropdown();
+        }
+      });
+      
+      // 阻止下拉框内部点击事件冒泡
+      languageDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+      
+      // 初始选择维吾尔文
+      updateSelectedLanguage('维吾尔文');
+    }
+    
+    // 渲染语言选项
+    function renderLanguageOptions(languages) {
+      languageDropdown.innerHTML = '';
+      
+      languages.forEach(language => {
+        const item = document.createElement('div');
+        item.className = `language-item ${language === targetLanguage.value ? 'selected' : ''}`;
+        item.textContent = language;
+        item.addEventListener('click', () => {
+          updateSelectedLanguage(language);
+          closeDropdown();
+        });
+        languageDropdown.appendChild(item);
+      });
+    }
+    
+    // 更新选中的语言
+    function updateSelectedLanguage(language) {
+      targetLanguage.value = language;
+      selectedLanguageText.textContent = language;
+      
+      // 更新系统提示词
+      systemPromptInput.value = `把下面的文本翻译成${language}，不要额外解释`;
+      
+      // 更新选中状态样式
+      document.querySelectorAll('.language-item').forEach(item => {
+        if (item.textContent === language) {
+          item.classList.add('selected');
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+    }
+    
+    // 切换下拉框显示/隐藏
+    function toggleDropdown() {
+      if (isDropdownOpen) {
+        closeDropdown();
+      } else {
+        openDropdown();
+      }
+    }
+    
+    // 打开下拉框
+    function openDropdown() {
+      languageDropdown.classList.remove('hidden');
+      isDropdownOpen = true;
+      languageSelectBtn.querySelector('i').classList.add('rotate-180');
+    }
+    
+    // 关闭下拉框
+    function closeDropdown() {
+      languageDropdown.classList.add('hidden');
+      isDropdownOpen = false;
+      languageSelectBtn.querySelector('i').classList.remove('rotate-180');
+    }
+    
+    // 更新字符计数
+    contentInput.addEventListener('input', () => {
+      userContentCharCount.textContent = contentInput.value.length;
+    });
+    
+    // 清空内容
+    clearBtn.addEventListener('click', () => {
+      contentInput.value = '';
+      userContentCharCount.textContent = '0';
+      
+      // 重置响应区域
+      aiAnswerContainer.innerHTML = `
+        <div class="text-neutral/50 flex flex-col items-center justify-center h-full">
+          <i class="fa fa-language text-4xl mb-3 opacity-50"></i>
+          <p class="text-center">翻译结果将显示在这里</p>
+          <p class="text-xs mt-2">Translation result will be displayed here</p>
+        </div>
+      `;
+      answerCopyBtnContainer.classList.add('hidden');
+      
+      responseData = null;
+      currentAiAnswer = '';
+      statusContainer.classList.add('hidden');
+    });
+    
+    // 显示状态信息
+    function showStatus(type, title, content) {
+      statusContainer.classList.remove('hidden');
+      
+      // 设置图标和颜色
+      switch(type) {
+        case 'info':
+          statusIcon.className = 'fa fa-info-circle mr-2 text-primary';
+          statusTitle.textContent = title || '信息';
+          break;
+        case 'success':
+          statusIcon.className = 'fa fa-check-circle mr-2 text-secondary';
+          statusTitle.textContent = title || '成功';
+          break;
+        case 'error':
+          statusIcon.className = 'fa fa-exclamation-circle mr-2 text-red-500';
+          statusTitle.textContent = title || '错误';
+          break;
+        case 'loading':
+          statusIcon.className = 'fa fa-spinner fa-spin mr-2 text-primary';
+          statusTitle.textContent = title || '处理中';
+          break;
+      }
+      
+      statusContent.textContent = content;
+    }
+    
+    // 复制翻译结果
+    answerCopyBtn.addEventListener('click', () => {
+      if (!currentAiAnswer) return;
+      
+      navigator.clipboard.writeText(currentAiAnswer).then(() => {
+        const originalIcon = answerCopyBtn.innerHTML;
+        answerCopyBtn.innerHTML = '<i class="fa fa-check"></i>';
+        answerCopyBtn.style.backgroundColor = '#10B981';
+        answerCopyBtn.style.color = 'white';
+        
+        setTimeout(() => {
+          answerCopyBtn.innerHTML = originalIcon;
+          answerCopyBtn.style.backgroundColor = '';
+          answerCopyBtn.style.color = '';
+        }, 2000);
+      });
+    });
+    
+    // 发送翻译请求
+    submitBtn.addEventListener('click', async () => {
+      // 获取输入内容
+      const systemPrompt = systemPromptInput.value.trim();
+      const content = contentInput.value.trim();
+      const targetLang = targetLanguage.value;
+      
+      // 验证必填项
+      if (!content) {
+        showStatus('error', '输入错误', '请输入需要翻译的内容');
+        contentInput.focus();
+        return;
+      }
+      
+      // 准备请求
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 翻译中...';
+      aiAnswerContainer.innerHTML = `
+        <div class="text-neutral/50 flex flex-col items-center justify-center h-full">
+          <i class="fa fa-spinner fa-spin text-4xl mb-3"></i>
+          <p class="text-center">正在翻译为${targetLang}，请稍候...</p>
+        </div>
+      `;
+      answerCopyBtnContainer.classList.add('hidden');
+      showStatus('loading', '翻译中', `正在将内容翻译为${targetLang}...`);
+      
+      try {
+        // 构建 messages 数组
+        const messages = [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: content
+          }
+        ];
+        
+        // 发送 API 请求（使用内置密钥和默认模型）
+        const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${API_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: DEFAULT_MODEL,
+            messages: messages
+          })
+        });
+        
+        // 处理响应
+        responseData = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(`API 响应错误: ${response.status} - ${JSON.stringify(responseData)}`);
+        }
+        
+        // 提取翻译结果
+        let aiAnswer = '';
+        if (responseData.choices && responseData.choices.length > 0) {
+          aiAnswer = responseData.choices[0].message?.content || '';
+        }
+        
+        if (!aiAnswer) {
+          throw new Error('API 响应中未找到有效翻译内容');
+        }
+        
+        currentAiAnswer = aiAnswer;
+        
+        // 显示翻译结果
+        aiAnswerContainer.innerHTML = `<div class="ai-answer text-neutral">${aiAnswer}</div>`;
+        answerCopyBtnContainer.classList.remove('hidden');
+        
+        showStatus('success', '翻译成功', `内容已成功翻译为${targetLang}`);
+        
+      } catch (error) {
+        // 处理错误
+        aiAnswerContainer.innerHTML = `
+          <div class="text-red-500 flex flex-col items-center justify-center h-full">
+            <i class="fa fa-exclamation-triangle text-4xl mb-3"></i>
+            <p class="text-center font-medium mb-2">翻译失败</p>
+            <p class="text-sm text-neutral/70 max-w-md text-center">${error.message}</p>
+          </div>
+        `;
+        answerCopyBtnContainer.classList.add('hidden');
+        showStatus('error', '翻译失败', error.message);
+        
+      } finally {
+        // 恢复按钮状态
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa fa-language mr-2"></i> 开始翻译';
+      }
+    });
+    
+    // 初始化
+    function init() {
+      // 初始化字符计数
+      userContentCharCount.textContent = contentInput.value.length;
+      
+      // 初始化语言选择器
+      initLanguageSelector();
+    }
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
 </html>
